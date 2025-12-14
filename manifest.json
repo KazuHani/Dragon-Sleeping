@@ -1,0 +1,17 @@
+{
+  "name": "The Dragon's Keep",
+  "short_name": "DragonKeep",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0c0a09",
+  "theme_color": "#0c0a09",
+  "description": "Ambient dragon sounds for sleep and relaxation.",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

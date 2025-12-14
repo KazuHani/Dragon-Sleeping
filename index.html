@@ -5,6 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Dragon's Keep</title>
+
+    <!-- PWA / Mobile App Capabilities -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-512.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0c0a09">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Custom Font Fallbacks */
@@ -699,6 +707,20 @@
 
                 bgLayer.style.backgroundImage = bgUrl;
                 localStorage.setItem('dragon_keep_bg', type);
+
+                // Update Mobile Theme Color
+                const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+                if (metaThemeColor) {
+                    let color = '#0c0a09'; // Default Obsidian/Stone-950
+                    switch (type) {
+                        case 'Crimson': color = '#450a0a'; break; // Red-950
+                        case 'Misty': color = '#0f172a'; break; // Slate-900
+                        case 'Golden': color = '#1c1917'; break; // Stone-900
+                        case 'Emerald': color = '#0c0a09'; break; // Stone-950
+                        case 'Amethyst': color = '#3b0764'; break; // Purple-950
+                    }
+                    metaThemeColor.setAttribute('content', color);
+                }
 
                 // Close modal
                 bgModal.classList.add('opacity-0');
