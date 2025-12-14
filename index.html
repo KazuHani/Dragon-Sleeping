@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Dragon's Keep</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom Font Fallbacks */
+        .font-medieval {
+            font-family: 'Times New Roman', Times, serif;
+        }
+
+        /* Range Slider Customization */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #b91c1c;
+            /* red-700 */
+            cursor: pointer;
+            margin-top: -6px;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #292524;
+            /* stone-800 */
+            border-radius: 2px;
+        }
+
+        input[type=range]:focus {
+            outline: none;
+        }
+
+        /* Animations */
+        @keyframes pulse-slow {
+
+            0%,
+            100% {
+                opacity: 0.2;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.4;
+                transform: scale(1.1);
+            }
+        }
+
+        .animate-pulse-slow {
+            animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        /* Scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1c1917;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #7f1d1d;
+            border-radius: 4px;
+        }
+    </style>
+    <!-- Chromecast SDK -->
+    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+</head>
+
+<body
+    class="min-h-screen bg-stone-950 text-amber-50 font-serif flex flex-col relative overflow-y-auto selection:bg-red-900 selection:text-white">
+
+    <!-- Local Audio Elements -->
+    <audio id="valley-audio" src="sounds/Dragon Valley Ambience.mp3" loop preload="auto" class="hidden"></audio>
+    <audio id="sleeping-audio" src="sounds/Sleeping Dragon.mp3" loop preload="auto" class="hidden"></audio>
+    <audio id="rain-audio" src="sounds/Relaxing Rain Sounds = Drifting to Sleep 😴-256x144-avc1-opus.mp3" loop
+        preload="auto" class="hidden"></audio>
+    <audio id="fireplace-audio" src="sounds/Fireplace.mp3" loop preload="auto" class="hidden"></audio>
+
+    <!-- Embers Canvas -->
+    <canvas id="embers-canvas" class="fixed inset-0 w-full h-full pointer-events-none mix-blend-screen -z-40"></canvas>
+
+    <!-- Background Texture -->
+    <!-- Background Texture -->
+    <div id="bg-layer"
+        class="fixed inset-0 opacity-20 pointer-events-none mix-blend-overlay transition-all duration-1000 bg-center bg-cover"
+        style="background-image: url(&quot;data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E&quot;)">
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-grow flex flex-col items-center justify-center p-6 z-10 w-full max-w-7xl mx-auto my-8">
+
+        <!-- Header -->
+        <header class="mb-8 text-center relative w-full">
+            <div class="absolute right-0 top-0 flex gap-4">
+                <!-- Cast Button Placeholder - Google Cast SDK will replace this -->
+                <google-cast-launcher
+                    class="w-8 h-8 opacity-70 hover:opacity-100 transition-opacity cursor-pointer"></google-cast-launcher>
+
+                <!-- Background Settings Toggle -->
+                <button id="bg-settings-btn"
+                    class="text-stone-500 hover:text-amber-100 transition-colors relative z-50 pointer-events-auto p-2"
+                    title="Change Environment">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        <circle cx="12" cy="10" r="3" />
+                    </svg>
+                </button>
+            </div>
+            <h1
+                class="font-medieval text-4xl md:text-6xl font-black tracking-widest text-red-700 uppercase drop-shadow-lg">
+                The Dragon's Keep
+            </h1>
+            <p class="mt-4 text-stone-400 italic text-lg tracking-wider">
+                Rest weary traveller, beneath the wings of the beast.
+            </p>
+        </header>
+
+        <!-- Visualizer -->
+        <div id="visualizer-container"
+            class="relative w-64 h-64 md:w-80 md:h-80 mb-12 transition-transform duration-[3000ms] scale-100">
+            <!-- Glow -->
+            <div id="visualizer-glow"
+                class="absolute inset-0 bg-red-600 rounded-full blur-[60px] opacity-0 transition-opacity duration-[2000ms]">
+            </div>
+
+            <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-2xl">
+                <!-- Outer Ring -->
+                <circle cx="50" cy="50" r="45" stroke="#78350f" stroke-width="2" fill="none" class="opacity-50" />
+                <circle cx="50" cy="50" r="40" stroke="#78350f" stroke-width="1" fill="none" stroke-dasharray="4 2"
+                    class="opacity-30" />
+
+                <!-- Dragon Silhouette -->
+                <path d="M50 20 C60 20 75 30 75 50 C75 70 60 80 50 80 C40 80 25 70 25 50 C25 30 40 20 50 20 Z"
+                    fill="#1c1917" stroke="#b91c1c" stroke-width="1.5" />
+                <path d="M50 25 C55 25 65 35 65 50 C65 65 55 75 50 75 C45 75 35 65 35 50 C35 35 45 25 50 25 Z"
+                    fill="#292524" />
+
+                <!-- Eye Group (Animated) -->
+                <g id="dragon-eye-group" class="origin-center transition-all duration-[2000ms] ease-in-out opacity-50"
+                    style="transform: scaleY(0.1);">
+                    <path d="M50 40 C52 40 55 45 55 50 C55 55 52 60 50 60 C48 60 45 55 45 50 C45 45 48 40 50 40 Z"
+                        fill="#fcd34d" />
+                    <rect x="49" y="42" width="2" height="16" fill="#000" rx="1" />
+                </g>
+            </svg>
+        </div>
+
+        <!-- Controls Container (Removed Master Button as requested) -->
+        <div class="flex flex-col items-center gap-6 mb-8 w-full max-w-md">
+            <!-- No Master Button -->
+        </div>
+
+        <!-- Mixer Board -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 w-full max-w-6xl px-4">
+
+            <!-- Dragon Valley -->
+            <div
+                class="bg-stone-900/80 p-6 rounded-lg border border-stone-800 shadow-lg flex flex-col items-center gap-4 backdrop-blur-sm group hover:border-emerald-900/50 transition-colors">
+                <div
+                    class="p-4 rounded-full bg-stone-950 border border-stone-800 group-hover:border-emerald-900/50 transition-colors text-stone-400 group-hover:text-amber-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m8 3 4 8 5-5 5 15H2L8 3z" />
+                    </svg>
+                </div>
+                <span class="text-base font-bold text-stone-400 uppercase tracking-widest">Dragon Valley</span>
+                <input type="range" id="vol-valley" min="0" max="1" step="0.01" value="0.0" class="w-full h-2">
+            </div>
+
+            <!-- Sleeping Dragon -->
+            <div
+                class="bg-stone-900/80 p-6 rounded-lg border border-stone-800 shadow-lg flex flex-col items-center gap-4 backdrop-blur-sm group hover:border-indigo-900/50 transition-colors">
+                <div
+                    class="p-4 rounded-full bg-stone-950 border border-stone-800 group-hover:border-indigo-900/50 transition-colors text-stone-400 group-hover:text-amber-100">
+                    <!-- Bed Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 20h20" />
+                        <path d="M2 4v16" />
+                        <path d="M22 4v16" />
+                        <path d="M2 8h20" />
+                        <path d="M12 4v4" />
+                        <path d="M2 14h20" />
+                        <path d="M6 14v6" />
+                        <path d="M18 14v6" />
+                    </svg>
+                </div>
+                <span class="text-base font-bold text-stone-400 uppercase tracking-widest">Sleeping Dragon</span>
+                <input type="range" id="vol-sleeping" min="0" max="1" step="0.01" value="0.0" class="w-full h-2">
+            </div>
+
+            <!-- Rain Sounds -->
+            <div
+                class="bg-stone-900/80 p-6 rounded-lg border border-stone-800 shadow-lg flex flex-col items-center gap-4 backdrop-blur-sm group hover:border-blue-900/50 transition-colors">
+                <div
+                    class="p-4 rounded-full bg-stone-950 border border-stone-800 group-hover:border-blue-900/50 transition-colors text-stone-400 group-hover:text-amber-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
+                        <path d="M16 14v6" />
+                        <path d="M8 14v6" />
+                        <path d="M12 16v6" />
+                    </svg>
+                </div>
+                <span class="text-base font-bold text-stone-400 uppercase tracking-widest">Rain Sounds</span>
+                <input type="range" id="vol-rain" min="0" max="1" step="0.01" value="0.0" class="w-full h-2">
+            </div>
+
+            <!-- Fireplace -->
+            <div
+                class="bg-stone-900/80 p-6 rounded-lg border border-stone-800 shadow-lg flex flex-col items-center gap-4 backdrop-blur-sm group hover:border-red-900/50 transition-colors">
+                <div
+                    class="p-4 rounded-full bg-stone-950 border border-stone-800 group-hover:border-red-900/50 transition-colors text-stone-400 group-hover:text-amber-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.115.385-2.256 1-3.24A8.8 8.8 0 0 1 8.5 14.5Z" />
+                    </svg>
+                </div>
+                <span class="text-base font-bold text-stone-400 uppercase tracking-widest">Fireplace</span>
+                <input type="range" id="vol-fireplace" min="0" max="1" step="0.01" value="0.0" class="w-full h-2">
+            </div>
+
+        </div>
+
+        <!-- Sleep Timer -->
+        <div
+            class="mt-16 w-full max-w-md bg-stone-900/50 p-6 rounded-lg border border-stone-800 backdrop-blur-sm shadow-xl">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3 text-stone-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    <span class="text-base font-bold uppercase tracking-wider">Sleep Timer</span>
+                </div>
+                <span id="timer-display" class="text-amber-500 font-mono text-2xl font-bold">Off</span>
+            </div>
+
+            <!-- Quick Select Buttons (Mobile Friendly) -->
+            <div class="grid grid-cols-4 gap-2 mb-4">
+                <button onclick="addTime(15)"
+                    class="py-3 px-2 text-sm font-bold text-stone-400 bg-stone-950 hover:bg-stone-800 hover:text-amber-100 rounded border border-stone-800 transition-colors">+15m</button>
+                <button onclick="addTime(30)"
+                    class="py-3 px-2 text-sm font-bold text-stone-400 bg-stone-950 hover:bg-stone-800 hover:text-amber-100 rounded border border-stone-800 transition-colors">+30m</button>
+                <button onclick="addTime(45)"
+                    class="py-3 px-2 text-sm font-bold text-stone-400 bg-stone-950 hover:bg-stone-800 hover:text-amber-100 rounded border border-stone-800 transition-colors">+45m</button>
+                <button onclick="addTime(60)"
+                    class="py-3 px-2 text-sm font-bold text-stone-400 bg-stone-950 hover:bg-stone-800 hover:text-amber-100 rounded border border-stone-800 transition-colors">+60m</button>
+            </div>
+
+            <!-- Custom Input -->
+            <div class="flex gap-2 justify-between items-center bg-stone-950 p-2 rounded border border-stone-800">
+                <input type="number" inputmode="numeric" pattern="[0-9]*" id="timer-input" min="1" max="999"
+                    placeholder="Custom"
+                    class="w-full bg-transparent text-stone-300 text-lg p-2 focus:outline-none placeholder:text-stone-700">
+                <span class="text-stone-600 text-sm font-bold mr-2">MIN</span>
+                <button onclick="setCustomTimer()"
+                    class="px-6 py-2 text-sm font-bold text-stone-950 bg-amber-700 hover:bg-amber-600 rounded transition-colors whitespace-nowrap">
+                    Set
+                </button>
+            </div>
+
+            <button onclick="clearTime()"
+                class="w-full mt-4 py-2 text-xs font-bold text-red-900/50 hover:text-red-500 hover:bg-red-950/30 rounded transition-colors uppercase tracking-widest">Stop
+                Timer</button>
+        </div>
+
+    </div>
+
+    <!-- Background Selection Modal -->
+    <div id="bg-modal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-stone-900 border border-red-900/50 p-6 rounded-lg max-w-lg w-full m-4 shadow-2xl relative">
+            <button id="bg-modal-close" class="absolute top-4 right-4 text-stone-500 hover:text-red-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+            <h2 class="text-2xl font-medieval text-red-700 mb-6 text-center">Choose Your Lair</h2>
+            <div class="grid grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-2">
+                <button onclick="selectBackground('obsidian')"
+                    class="p-4 bg-stone-950 border border-stone-800 hover:border-red-900 rounded flex flex-col items-center gap-2 group">
+                    <div class="w-full h-16 bg-stone-900 rounded opacity-50 group-hover:opacity-100 transition-opacity"
+                        style="background-color: #0c0a09"></div>
+                    <span class="text-stone-400 group-hover:text-amber-100">Obsidian Keep</span>
+                </button>
+                <button onclick="selectBackground('Crimson')"
+                    class="p-4 bg-stone-950 border border-stone-800 hover:border-red-900 rounded flex flex-col items-center gap-2 group">
+                    <div class="w-full h-16 bg-red-950 rounded opacity-50 group-hover:opacity-100 transition-opacity"
+                        style="background-color: #450a0a"></div>
+                    <span class="text-stone-400 group-hover:text-amber-100">Crimson Cave</span>
+                </button>
+                <button onclick="selectBackground('Misty')"
+                    class="p-4 bg-stone-950 border border-stone-800 hover:border-red-900 rounded flex flex-col items-center gap-2 group">
+                    <div class="w-full h-16 bg-slate-900 rounded opacity-50 group-hover:opacity-100 transition-opacity"
+                        style="background-color: #0f172a"></div>
+                    <span class="text-stone-400 group-hover:text-amber-100">Misty Peaks</span>
+                </button>
+                <button onclick="selectBackground('Golden')"
+                    class="p-4 bg-stone-950 border border-stone-800 hover:border-red-900 rounded flex flex-col items-center gap-2 group">
+                    <div class="w-full h-16 bg-amber-900 rounded opacity-50 group-hover:opacity-100 transition-opacity"
+                        style="background-color: #451a03"></div>
+                    <span class="text-stone-400 group-hover:text-amber-100">Gold Hoard</span>
+                </button>
+                <!-- New Backgrounds -->
+                <button onclick="selectBackground('Emerald')"
+                    class="p-4 bg-stone-950 border border-stone-800 hover:border-emerald-900 rounded flex flex-col items-center gap-2 group">
+                    <div class="w-full h-16 bg-emerald-900 rounded opacity-50 group-hover:opacity-100 transition-opacity"
+                        style="background-color: #064e3b"></div>
+                    <span class="text-stone-400 group-hover:text-amber-100">Emerald Sanctuary</span>
+                </button>
+                <button onclick="selectBackground('Amethyst')"
+                    class="p-4 bg-stone-950 border border-stone-800 hover:border-purple-900 rounded flex flex-col items-center gap-2 group">
+                    <div class="w-full h-16 bg-purple-900 rounded opacity-50 group-hover:opacity-100 transition-opacity"
+                        style="background-color: #581c87"></div>
+                    <span class="text-stone-400 group-hover:text-amber-100">Amethyst Geode</span>
+                </button>
+            </div>
+        </div>
+
+        <footer class="p-4 text-center text-stone-600 text-sm z-10 border-t border-stone-900 bg-stone-950">
+            <p>Forged for the Dragon Keeper</p>
+        </footer>
+
+        <!-- Application Logic -->
+        <script>
+            // --- State Management ---
+            const state = {
+                isPlaying: false,
+                // Initial volumes set to 0.0
+                volumes: {
+                    valley: 0.0,
+                    sleeping: 0.0,
+                    rain: 0.0,
+                    fireplace: 0.0
+                },
+                timer: 0,
+                timerActive: false
+            };
+
+            // --- Refs ---
+            const valleyAudio = document.getElementById('valley-audio');
+            const sleepingAudio = document.getElementById('sleeping-audio');
+            const rainAudio = document.getElementById('rain-audio');
+            const fireplaceAudio = document.getElementById('fireplace-audio');
+            let timerInterval = null;
+
+            // --- DOM Elements ---
+            const visualizerContainer = document.getElementById('visualizer-container');
+            const visualizerGlow = document.getElementById('visualizer-glow');
+            const dragonEyeGroup = document.getElementById('dragon-eye-group');
+            const timerDisplay = document.getElementById('timer-display');
+            const timerInput = document.getElementById('timer-input');
+
+            // Background Elements
+            const bgLayer = document.getElementById('bg-layer');
+            const bgSettingsBtn = document.getElementById('bg-settings-btn');
+            const bgModal = document.getElementById('bg-modal');
+            const bgModalClose = document.getElementById('bg-modal-close');
+
+            // --- Interaction Logic ---
+
+            // Chromecast
+            window['__onGCastApiAvailable'] = function (isAvailable) {
+                if (isAvailable) {
+                    cast.framework.CastContext.getInstance().setOptions({
+                        receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+                        autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+                    });
+                }
+            };
+
+            // Resource Optimization (Page Visibility)
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    // Pause intensive visuals
+                    cancelAnimationFrame(animationId); // Embers
+                } else {
+                    // Resume visuals
+                    animateEmbers();
+                }
+            });
+
+            // Loop Verification & Preloading
+            [valleyAudio, sleepingAudio, rainAudio, fireplaceAudio].forEach(audio => {
+                audio.loop = true;
+                audio.load(); // Force preload
+            });
+
+            function updateMediaPlayers() {
+                // Volume control handles play/pause automatically per track based on input
+                // But we can check if we should "play" now if volume > 0 and it was paused?
+                // Actually, the slider 'input' event should handle the heavy lifting.
+                // This function might be less needed or just for global state sync.
+
+                // Check if ANY audio should be playing
+                const anyActive = Object.values(state.volumes).some(v => v > 0);
+
+                if (anyActive) {
+                    state.isPlaying = true;
+                    // If specific tracks are > 0 but paused, play them
+                    if (state.volumes.valley > 0 && valleyAudio.paused) valleyAudio.play().catch(e => console.log(e));
+                    if (state.volumes.sleeping > 0 && sleepingAudio.paused) sleepingAudio.play().catch(e => console.log(e));
+                    if (state.volumes.rain > 0 && rainAudio.paused) rainAudio.play().catch(e => console.log(e));
+                    if (state.volumes.fireplace > 0 && fireplaceAudio.paused) fireplaceAudio.play().catch(e => console.log(e));
+                } else {
+                    state.isPlaying = false;
+                    // Pause all
+                    valleyAudio.pause();
+                    sleepingAudio.pause();
+                    rainAudio.pause();
+                    fireplaceAudio.pause();
+                }
+
+                updateUI();
+            }
+
+            // --- UI Updates ---
+            function updateUI() {
+                // Visualizer & Eye Animation - Tied directly to isPlaying (any sound active)
+                if (state.isPlaying) {
+                    visualizerContainer.classList.add('scale-105');
+                    visualizerContainer.classList.remove('scale-100');
+                    if (!document.hidden) {
+                        visualizerGlow.classList.add('animate-pulse-slow');
+                        visualizerGlow.classList.remove('opacity-0');
+                    }
+
+                    // Open Eye
+                    dragonEyeGroup.style.transform = 'scaleY(1)';
+                    dragonEyeGroup.classList.remove('opacity-50');
+                    dragonEyeGroup.classList.add('opacity-100');
+                } else {
+                    visualizerContainer.classList.add('scale-100');
+                    visualizerContainer.classList.remove('scale-105');
+                    visualizerGlow.classList.remove('animate-pulse-slow');
+                    visualizerGlow.classList.add('opacity-0');
+
+                    // Close Eye
+                    dragonEyeGroup.style.transform = 'scaleY(0.1)';
+                    dragonEyeGroup.classList.add('opacity-50');
+                    dragonEyeGroup.classList.remove('opacity-100');
+                }
+            }
+
+            // --- Volume Sliders ---
+            const sliderMap = {
+                'vol-valley': 'valley',
+                'vol-sleeping': 'sleeping',
+                'vol-rain': 'rain',
+                'vol-fireplace': 'fireplace'
+            };
+
+            Object.keys(sliderMap).forEach(id => {
+                const el = document.getElementById(id);
+                // Initialize slider value
+                el.value = state.volumes[sliderMap[id]];
+
+                el.addEventListener('input', (e) => {
+                    const val = parseFloat(e.target.value);
+                    const type = sliderMap[id];
+                    state.volumes[type] = val;
+
+                    // Immediate feedback
+                    let targetAudio;
+                    if (type === 'valley') targetAudio = valleyAudio;
+                    else if (type === 'sleeping') targetAudio = sleepingAudio;
+                    else if (type === 'rain') targetAudio = rainAudio;
+                    else if (type === 'fireplace') targetAudio = fireplaceAudio;
+
+                    if (targetAudio) {
+                        targetAudio.volume = val;
+                        if (val > 0) {
+                            targetAudio.play().catch(() => { });
+                        } else {
+                            targetAudio.pause();
+                        }
+                    }
+
+                    updateMediaPlayers(); // Updates global state and UI
+                });
+            });
+
+            // --- Timer Logic ---
+            function setCustomTimer() {
+                const mins = parseInt(timerInput.value);
+                if (!mins || mins <= 0) return;
+
+                state.timer = mins;
+                state.timerActive = true;
+                updateTimerDisplay();
+                startTimer();
+            }
+
+            function addTime(min) {
+                // Legacy / Helper support if we kept buttons, but we replaced with custom input
+                // Keeping function just in case or mapping it to the logic
+                state.timer += min;
+                state.timerActive = true;
+                updateTimerDisplay();
+                if (!timerInterval) startTimer();
+            }
+
+            function clearTime() {
+                state.timer = 0;
+                state.timerActive = false;
+                updateTimerDisplay();
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+
+            function startTimer() {
+                clearInterval(timerInterval);
+                timerInterval = setInterval(() => {
+                    if (state.timer > 0) {
+                        state.timer--;
+                        updateTimerDisplay();
+                    }
+
+                    if (state.timer <= 0) {
+                        // Time's up
+                        clearTime();
+                        // Stop all audio
+                        Object.keys(state.volumes).forEach(key => state.volumes[key] = 0);
+                        // Update sliders
+                        document.getElementById('vol-valley').value = 0;
+                        document.getElementById('vol-sleeping').value = 0;
+                        document.getElementById('vol-rain').value = 0;
+                        document.getElementById('vol-fireplace').value = 0;
+
+                        updateMediaPlayers(); // Will pause everything since volumes are 0
+                    }
+                }, 60000); // 1 min
+            }
+
+            function updateTimerDisplay() {
+                if (state.timer > 0) {
+                    const h = Math.floor(state.timer / 60);
+                    const m = state.timer % 60;
+                    timerDisplay.innerText = `${h}h ${m}m`;
+                } else {
+                    timerDisplay.innerText = "Off";
+                }
+            }
+
+            // --- Embers Animation ---
+            const canvas = document.getElementById('embers-canvas');
+            const ctx = canvas.getContext('2d');
+            let embers = [];
+
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+
+            class Ember {
+                constructor() {
+                    this.reset();
+                    this.y = Math.random() * canvas.height; // Start anywhere
+                }
+
+                reset() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = canvas.height + Math.random() * 100; // Start below screen
+                    this.size = Math.random() * 3 + 1;
+                    this.speed = Math.random() * 1 + 0.5;
+                    this.opacity = Math.random() * 0.8 + 0.2;
+                    this.drift = Math.random() * 0.5 - 0.25; // Left/right drift
+                }
+
+                update() {
+                    this.y -= this.speed;
+                    this.x += this.drift;
+
+                    // Fade out at top
+                    if (this.y < canvas.height * 0.3) {
+                        this.opacity -= 0.005;
+                    }
+
+                    if (this.y < -10 || this.opacity <= 0) {
+                        this.reset();
+                    }
+                }
+
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    // Blend from red to orange/yellow
+                    const color = `rgba(255, ${Math.floor(this.y / canvas.height * 150 + 50)}, 0, ${this.opacity})`;
+                    ctx.fillStyle = color;
+                    ctx.shadowBlur = this.size * 3;
+                    ctx.shadowColor = color;
+                    ctx.fill();
+                }
+            }
+
+            let animationId;
+            function initEmbers() {
+                resizeCanvas();
+                // Reset array on init if needed
+                if (embers.length === 0) {
+                    for (let i = 0; i < 100; i++) {
+                        embers.push(new Ember());
+                    }
+                }
+            }
+
+            function animateEmbers() {
+                if (document.hidden) return; // double check
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                embers.forEach(ember => {
+                    ember.update();
+                    ember.draw();
+                });
+                animationId = requestAnimationFrame(animateEmbers);
+            }
+
+            window.addEventListener('resize', resizeCanvas);
+            initEmbers();
+            animateEmbers();
+
+            // --- Background Logic ---
+            bgSettingsBtn.addEventListener('click', () => {
+                bgModal.classList.remove('hidden');
+                // Small delay for fade in
+                setTimeout(() => bgModal.classList.remove('opacity-0'), 10);
+            });
+
+            bgModalClose.addEventListener('click', () => {
+                bgModal.classList.add('opacity-0');
+                setTimeout(() => bgModal.classList.add('hidden'), 300);
+            });
+
+            // Close on outside click
+            bgModal.addEventListener('click', (e) => {
+                if (e.target === bgModal) {
+                    bgModal.classList.add('opacity-0');
+                    setTimeout(() => bgModal.classList.add('hidden'), 300);
+                }
+            });
+
+            function selectBackground(type) {
+                let bgUrl = '';
+                // Using placeholder colors / gradients / svg patterns for now
+                // You can replace these with actual image assets
+
+                switch (type) {
+                    case 'obsidian':
+                        // Default SVG
+                        bgUrl = `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`;
+                        bgLayer.className = "fixed inset-0 opacity-20 pointer-events-none mix-blend-overlay transition-all duration-1000 bg-center bg-cover";
+                        document.body.className = "min-h-screen bg-stone-950 text-amber-50 font-serif flex flex-col relative overflow-y-auto selection:bg-red-900 selection:text-white";
+                        break;
+                    case 'Crimson':
+                        bgUrl = `linear-gradient(to bottom right, #450a0a, #000000)`;
+                        bgLayer.className = "fixed inset-0 opacity-40 pointer-events-none mix-blend-multiply transition-all duration-1000";
+                        document.body.className = "min-h-screen bg-red-950 text-amber-50 font-serif flex flex-col relative overflow-y-auto selection:bg-red-900 selection:text-white";
+                        break;
+                    case 'Misty':
+                        bgUrl = `linear-gradient(to top, #0f172a, #1e293b)`;
+                        bgLayer.className = "fixed inset-0 opacity-30 pointer-events-none mix-blend-overlay transition-all duration-1000";
+                        document.body.className = "min-h-screen bg-slate-900 text-slate-100 font-serif flex flex-col relative overflow-y-auto selection:bg-blue-900 selection:text-white";
+                        break;
+                    case 'Golden':
+                        bgUrl = `radial-gradient(circle at center, #78350f, #2a1b0e)`;
+                        bgLayer.className = "fixed inset-0 opacity-30 pointer-events-none mix-blend-overlay transition-all duration-1000";
+                        document.body.className = "min-h-screen bg-stone-900 text-amber-100 font-serif flex flex-col relative overflow-y-auto selection:bg-amber-900 selection:text-white";
+                        break;
+                    case 'Emerald':
+                        bgUrl = `linear-gradient(to top left, #064e3b, #022c22)`;
+                        bgLayer.className = "fixed inset-0 opacity-30 pointer-events-none mix-blend-color-dodge transition-all duration-1000";
+                        document.body.className = "min-h-screen bg-stone-950 text-emerald-100 font-serif flex flex-col relative overflow-y-auto selection:bg-emerald-900 selection:text-white";
+                        break;
+                    case 'Amethyst':
+                        bgUrl = `linear-gradient(to bottom, #581c87, #000000)`;
+                        bgLayer.className = "fixed inset-0 opacity-20 pointer-events-none mix-blend-lighten transition-all duration-1000";
+                        document.body.className = "min-h-screen bg-purple-950 text-purple-100 font-serif flex flex-col relative overflow-y-auto selection:bg-purple-900 selection:text-white";
+                        break;
+                }
+
+                bgLayer.style.backgroundImage = bgUrl;
+                localStorage.setItem('dragon_keep_bg', type);
+
+                // Close modal
+                bgModal.classList.add('opacity-0');
+                setTimeout(() => bgModal.classList.add('hidden'), 300);
+            }
+
+            // Load saved background
+            const savedBg = localStorage.getItem('dragon_keep_bg');
+            if (savedBg) {
+                selectBackground(savedBg);
+            }
+
+
+        </script>
+</body>
+
+</html>
