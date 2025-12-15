@@ -28,13 +28,13 @@
 
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            height: 16px;
-            width: 16px;
+            height: 24px;
+            width: 24px;
             border-radius: 50%;
             background: #b91c1c;
             /* red-700 */
             cursor: pointer;
-            margin-top: -6px;
+            margin-top: -10px;
         }
 
         input[type=range]::-webkit-slider-runnable-track {
@@ -111,15 +111,15 @@
     <div class="flex-grow flex flex-col items-center justify-center p-6 z-10 w-full max-w-7xl mx-auto my-8">
 
         <!-- Header -->
-        <header class="mb-8 text-center relative w-full">
-            <div class="absolute right-0 top-0 flex gap-4">
-                <!-- Cast Button Placeholder - Google Cast SDK will replace this -->
+        <header class="mb-8 w-full flex flex-col items-center">
+            <!-- Top Bar (Settings / Cast) -->
+            <div class="w-full flex justify-end gap-4 mb-2 md:absolute md:top-0 md:right-0 md:mb-0 z-20">
+                <!-- Cast Button Placeholder -->
                 <google-cast-launcher
-                    class="w-8 h-8 opacity-70 hover:opacity-100 transition-opacity cursor-pointer"></google-cast-launcher>
+                    class="w-10 h-10 md:w-8 md:h-8 opacity-70 hover:opacity-100 transition-opacity cursor-pointer"></google-cast-launcher>
 
                 <!-- Background Settings Toggle -->
-                <button id="bg-settings-btn"
-                    class="text-stone-500 hover:text-amber-100 transition-colors relative z-50 pointer-events-auto p-2"
+                <button id="bg-settings-btn" class="text-stone-500 hover:text-amber-100 transition-colors p-2"
                     title="Change Environment">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -128,13 +128,17 @@
                     </svg>
                 </button>
             </div>
-            <h1
-                class="font-medieval text-4xl md:text-6xl font-black tracking-widest text-red-700 uppercase drop-shadow-lg">
-                The Dragon's Keep
-            </h1>
-            <p class="mt-4 text-stone-400 italic text-lg tracking-wider">
-                Rest weary traveller, beneath the wings of the beast.
-            </p>
+
+            <!-- Title -->
+            <div class="text-center relative z-10">
+                <h1
+                    class="font-medieval text-3xl md:text-6xl font-black tracking-widest text-red-700 uppercase drop-shadow-lg leading-tight">
+                    The Dragon's Keep
+                </h1>
+                <p class="mt-2 text-stone-400 italic text-base md:text-lg tracking-wider">
+                    Rest weary traveller, beneath the wings of the beast.
+                </p>
+            </div>
         </header>
 
         <!-- Visualizer -->
@@ -173,13 +177,13 @@
         </div>
 
         <!-- Mixer Board -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 w-full max-w-6xl px-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 w-full max-w-[1600px] px-4">
 
             <!-- Dragon Valley -->
             <div
-                class="bg-stone-900/80 p-6 rounded-lg border border-stone-800 shadow-lg flex flex-col items-center gap-4 backdrop-blur-sm group hover:border-emerald-900/50 transition-colors">
+                class="bg-stone-900/80 p-4 md:p-6 rounded-lg border border-stone-800 shadow-lg flex flex-col items-center gap-4 backdrop-blur-sm group hover:border-emerald-900/50 transition-colors">
                 <div
-                    class="p-4 rounded-full bg-stone-950 border border-stone-800 group-hover:border-emerald-900/50 transition-colors text-stone-400 group-hover:text-amber-100">
+                    class="p-3 md:p-4 rounded-full bg-stone-950 border border-stone-800 group-hover:border-emerald-900/50 transition-colors text-stone-400 group-hover:text-amber-100">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="m8 3 4 8 5-5 5 15H2L8 3z" />
@@ -191,9 +195,9 @@
 
             <!-- Sleeping Dragon -->
             <div
-                class="bg-stone-900/80 p-6 rounded-lg border border-stone-800 shadow-lg flex flex-col items-center gap-4 backdrop-blur-sm group hover:border-indigo-900/50 transition-colors">
+                class="bg-stone-900/80 p-4 md:p-6 rounded-lg border border-stone-800 shadow-lg flex flex-col items-center gap-4 backdrop-blur-sm group hover:border-indigo-900/50 transition-colors">
                 <div
-                    class="p-4 rounded-full bg-stone-950 border border-stone-800 group-hover:border-indigo-900/50 transition-colors text-stone-400 group-hover:text-amber-100">
+                    class="p-3 md:p-4 rounded-full bg-stone-950 border border-stone-800 group-hover:border-indigo-900/50 transition-colors text-stone-400 group-hover:text-amber-100">
                     <!-- Bed Icon -->
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -213,9 +217,9 @@
 
             <!-- Rain Sounds -->
             <div
-                class="bg-stone-900/80 p-6 rounded-lg border border-stone-800 shadow-lg flex flex-col items-center gap-4 backdrop-blur-sm group hover:border-blue-900/50 transition-colors">
+                class="bg-stone-900/80 p-4 md:p-6 rounded-lg border border-stone-800 shadow-lg flex flex-col items-center gap-4 backdrop-blur-sm group hover:border-blue-900/50 transition-colors">
                 <div
-                    class="p-4 rounded-full bg-stone-950 border border-stone-800 group-hover:border-blue-900/50 transition-colors text-stone-400 group-hover:text-amber-100">
+                    class="p-3 md:p-4 rounded-full bg-stone-950 border border-stone-800 group-hover:border-blue-900/50 transition-colors text-stone-400 group-hover:text-amber-100">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
@@ -230,9 +234,9 @@
 
             <!-- Fireplace -->
             <div
-                class="bg-stone-900/80 p-6 rounded-lg border border-stone-800 shadow-lg flex flex-col items-center gap-4 backdrop-blur-sm group hover:border-red-900/50 transition-colors">
+                class="bg-stone-900/80 p-4 md:p-6 rounded-lg border border-stone-800 shadow-lg flex flex-col items-center gap-4 backdrop-blur-sm group hover:border-red-900/50 transition-colors">
                 <div
-                    class="p-4 rounded-full bg-stone-950 border border-stone-800 group-hover:border-red-900/50 transition-colors text-stone-400 group-hover:text-amber-100">
+                    class="p-3 md:p-4 rounded-full bg-stone-950 border border-stone-800 group-hover:border-red-900/50 transition-colors text-stone-400 group-hover:text-amber-100">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path
@@ -263,13 +267,13 @@
             <!-- Quick Select Buttons (Mobile Friendly) -->
             <div class="grid grid-cols-4 gap-2 mb-4">
                 <button onclick="addTime(15)"
-                    class="py-3 px-2 text-sm font-bold text-stone-400 bg-stone-950 hover:bg-stone-800 hover:text-amber-100 rounded border border-stone-800 transition-colors">+15m</button>
+                    class="py-3 px-2 text-sm font-bold text-stone-400 bg-stone-950 hover:bg-stone-800 hover:text-amber-100 rounded border border-stone-800 transition-all active:scale-95">+15m</button>
                 <button onclick="addTime(30)"
-                    class="py-3 px-2 text-sm font-bold text-stone-400 bg-stone-950 hover:bg-stone-800 hover:text-amber-100 rounded border border-stone-800 transition-colors">+30m</button>
+                    class="py-3 px-2 text-sm font-bold text-stone-400 bg-stone-950 hover:bg-stone-800 hover:text-amber-100 rounded border border-stone-800 transition-all active:scale-95">+30m</button>
                 <button onclick="addTime(45)"
-                    class="py-3 px-2 text-sm font-bold text-stone-400 bg-stone-950 hover:bg-stone-800 hover:text-amber-100 rounded border border-stone-800 transition-colors">+45m</button>
+                    class="py-3 px-2 text-sm font-bold text-stone-400 bg-stone-950 hover:bg-stone-800 hover:text-amber-100 rounded border border-stone-800 transition-all active:scale-95">+45m</button>
                 <button onclick="addTime(60)"
-                    class="py-3 px-2 text-sm font-bold text-stone-400 bg-stone-950 hover:bg-stone-800 hover:text-amber-100 rounded border border-stone-800 transition-colors">+60m</button>
+                    class="py-3 px-2 text-sm font-bold text-stone-400 bg-stone-950 hover:bg-stone-800 hover:text-amber-100 rounded border border-stone-800 transition-all active:scale-95">+60m</button>
             </div>
 
             <!-- Custom Input -->
