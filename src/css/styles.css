@@ -273,9 +273,10 @@ input[type=range]::-moz-range-track {
 
 /* Minimalist Mode Utility */
 body.minimalist header>div.text-center,
-body.minimalist .max-w-md,
+body.minimalist .section-header,
 body.minimalist .grid,
-body.minimalist footer {
+body.minimalist footer,
+body.minimalist .max-w-md> :not(#master-btn) {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.5s ease;

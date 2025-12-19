@@ -1,9 +1,11 @@
-// --- Service Worker Registration ---
+// --- Service Worker Cleanup (Remove Offline Capability) ---
 if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./service-worker.js')
-            .then(reg => console.log('Service Worker registered', reg))
-            .catch(err => console.log('Service Worker registration failed', err));
+    navigator.serviceWorker.getRegistrations().then(function (registrations) {
+        for (let registration of registrations) {
+            registration.unregister().then(function (boolean) {
+                console.log('Service Worker unregistered: ', boolean);
+            });
+        }
     });
 }
 
@@ -42,7 +44,7 @@ class AudioEngine {
         this.spatialEnabled = false;
         this.spatialTime = 0;
 
-        this.isMuted = false;
+        this.isMuted = true; // Start muted to match UI 'Play' state
         this.masterVolume = 1.0;
 
         // Resume context
@@ -416,31 +418,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     const trackIds = ['valley-audio', 'sleeping-audio', 'rain-audio', 'fireplace-audio'];
     const trackNames = ['Dragon Valley', 'Sleeping Dragon', 'Rain', 'Fireplace'];
 
-    // Load tracks with progress indication
-    let loaded = 0;
-    for (let i = 0; i < trackIds.length; i++) {
-        const id = trackIds[i];
+    // Load tracks in parallel for faster startup
+    const promises = trackIds.map((id, index) => {
         const el = document.getElementById(id);
         if (el) {
             el.loop = true;
-            if (loadingText) {
-                loadingText.textContent = `Loading ${trackNames[i]}... (${loaded}/${trackIds.length})`;
-            }
-            await audio.addTrack(id);
-            loaded++;
+            return audio.addTrack(id);
         }
+        return Promise.resolve();
+    });
+
+    try {
+        await Promise.all(promises);
+    } catch (e) {
+        console.error("Audio preload error", e);
     }
 
-    // Hide loading indicator with fade out
+    // Hide loading indicator immediately
     if (loadingEl) {
-        loadingText.textContent = 'All sounds ready!';
+        loadingEl.style.transition = 'opacity 0.5s ease-out';
+        loadingEl.style.opacity = '0';
         setTimeout(() => {
-            loadingEl.style.transition = 'opacity 0.5s ease-out';
-            loadingEl.style.opacity = '0';
-            setTimeout(() => {
-                loadingEl.style.display = 'none';
-            }, 500);
-        }, 800);
+            loadingEl.style.display = 'none';
+        }, 500);
     }
 
     setupControls();
@@ -452,11 +452,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Minimalist Toggle
     document.getElementById('minimalist-btn').addEventListener('click', () => {
         document.body.classList.toggle('minimalist');
-        // Hide/Show main content
-        const toHide = document.querySelectorAll('header > div.text-center, .max-w-md, .grid, footer');
-        const isMin = document.body.classList.contains('minimalist');
-        toHide.forEach(el => el.style.opacity = isMin ? '0' : '1');
-        toHide.forEach(el => el.style.pointerEvents = isMin ? 'none' : 'auto');
     });
 });
 
@@ -525,7 +520,34 @@ function setupControls() {
     });
 
     const btn = document.getElementById('master-btn');
+    let hasInteractedWithAudio = false;
+
     btn.addEventListener('click', () => {
+        // Auto-play random sound if first time and silence
+        if (!hasInteractedWithAudio) {
+            hasInteractedWithAudio = true;
+            let currentTotalVol = 0;
+            // Check ambient sliders
+            Object.values(sliderMap).forEach(id => {
+                // Find slider key for this id
+                const key = Object.keys(sliderMap).find(k => sliderMap[k] === id);
+                const el = document.getElementById(key);
+                if (el) currentTotalVol += parseFloat(el.value);
+            });
+            // Also check generators? (Usually they are 0 at start)
+
+            if (currentTotalVol === 0) {
+                const keys = Object.keys(sliderMap);
+                const randomKey = keys[Math.floor(Math.random() * keys.length)];
+                const el = document.getElementById(randomKey);
+                if (el) {
+                    el.value = 0.3;
+                    el.dispatchEvent(new Event('input'));
+                    logAudioDebug(`Auto-selected ${randomKey} at 30%`);
+                }
+            }
+        }
+
         audio.toggleMasterMute();
         updateMasterBtnUI();
     });
@@ -728,8 +750,8 @@ function initVisuals() {
     }
     for (let i = 0; i < 100; i++) embers.push(new Ember());
 
-    // Track eye state to avoid constant re-animation
-    let eyeIsOpen = false;
+    // Track eye state for smooth lerping
+    let eyeScale = 0.1;
 
     function animate() {
         if (document.hidden) { requestAnimationFrame(animate); return; }
@@ -745,31 +767,30 @@ function initVisuals() {
         const glow = document.getElementById('visualizer-glow');
         const eyeGroup = document.getElementById('dragon-eye-group');
 
-        if (intensity > 10) {
+        if (intensity > 5) {
             const scale = 1 + (intensity / 1000); // 1.0 to 1.25
             container.style.transform = `scale(${scale})`;
             glow.style.opacity = intensity / 300; // 0 to 0.8
-
-            // Open the eye when audio is playing
-            if (!eyeIsOpen && eyeGroup) {
-                eyeGroup.style.transform = 'scaleY(1)';
-                eyeGroup.style.opacity = '1';
-                eyeGroup.classList.remove('eye-closed');
-                eyeGroup.classList.add('eye-open');
-                eyeIsOpen = true;
-            }
         } else {
             container.style.transform = 'scale(1)';
             glow.style.opacity = 0;
+        }
 
-            // Close the eye when audio stops
-            if (eyeIsOpen && eyeGroup) {
-                eyeGroup.style.transform = 'scaleY(0.1)';
-                eyeGroup.style.opacity = '0.5';
-                eyeGroup.classList.remove('eye-open');
-                eyeGroup.classList.add('eye-closed');
-                eyeIsOpen = false;
-            }
+        if (eyeGroup) {
+            // Dynamic Eye Opening Logic
+            // Map intensity (0-200) to scale (0.1 - 1.0)
+            let targetScale = 0.1 + (intensity / 200) * 0.9;
+            if (targetScale > 1.0) targetScale = 1.0;
+            if (targetScale < 0.1) targetScale = 0.1;
+
+            // Smoothly interpolate current scale to target (Lerp)
+            eyeScale += (targetScale - eyeScale) * 0.1; // 0.1 easing factor
+
+            eyeGroup.style.transform = `scaleY(${eyeScale})`;
+            eyeGroup.style.opacity = 0.5 + (eyeScale * 0.5); // Dimmer when closed
+
+            // Clear class-based animations if they conflict
+            eyeGroup.classList.remove('eye-closed', 'eye-open');
         }
 
         requestAnimationFrame(animate);
