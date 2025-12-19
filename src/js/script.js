@@ -413,35 +413,16 @@ const state = {
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const loadingEl = document.getElementById('audio-loading');
-    const loadingText = document.getElementById('audio-loading-text');
     const trackIds = ['valley-audio', 'sleeping-audio', 'rain-audio', 'fireplace-audio'];
-    const trackNames = ['Dragon Valley', 'Sleeping Dragon', 'Rain', 'Fireplace'];
 
-    // Load tracks in parallel for faster startup
-    const promises = trackIds.map((id, index) => {
+    // Load tracks in background (fire and forget)
+    trackIds.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
             el.loop = true;
-            return audio.addTrack(id);
+            audio.addTrack(id);
         }
-        return Promise.resolve();
     });
-
-    try {
-        await Promise.all(promises);
-    } catch (e) {
-        console.error("Audio preload error", e);
-    }
-
-    // Hide loading indicator immediately
-    if (loadingEl) {
-        loadingEl.style.transition = 'opacity 0.5s ease-out';
-        loadingEl.style.opacity = '0';
-        setTimeout(() => {
-            loadingEl.style.display = 'none';
-        }, 500);
-    }
 
     setupControls();
     setupProductivity();
