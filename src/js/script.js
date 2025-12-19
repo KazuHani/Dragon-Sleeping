@@ -39,6 +39,7 @@ class AudioEngine {
         this.analyser.connect(this.ctx.destination);
 
         this.tracks = {};
+        this.pendingVolumes = {};
         this.generators = {};
 
         this.spatialEnabled = false;
@@ -100,6 +101,11 @@ class AudioEngine {
             element.muted = this.isMuted;
             this.tracks[id] = { element, type: 'html5' };
         }
+
+        if (this.pendingVolumes[id] !== undefined) {
+            this.setTrackVolume(id, this.pendingVolumes[id]);
+            delete this.pendingVolumes[id];
+        }
     }
 
     setTrackVolume(id, vol) {
@@ -145,6 +151,8 @@ class AudioEngine {
                     track.element.pause();
                 }
             }
+        } else {
+            this.pendingVolumes[id] = vol;
         }
     }
 

@@ -25,10 +25,10 @@
     class="min-h-screen bg-stone-950 text-amber-50 font-serif flex flex-col relative overflow-y-auto selection:bg-red-900 selection:text-white">
 
     <!-- Local Audio Elements -->
-    <audio id="valley-audio" src="sounds/dragon-valley.mp3" loop preload="auto" class="hidden"></audio>
-    <audio id="sleeping-audio" src="sounds/sleeping-dragon.mp3" loop preload="auto" class="hidden"></audio>
-    <audio id="rain-audio" src="sounds/rain.mp3" loop preload="auto" class="hidden"></audio>
-    <audio id="fireplace-audio" src="sounds/fireplace.mp3" loop preload="auto" class="hidden"></audio>
+    <audio id="valley-audio" src="sounds/dragon-valley.mp3" loop preload="none" class="hidden"></audio>
+    <audio id="sleeping-audio" src="sounds/sleeping-dragon.mp3" loop preload="none" class="hidden"></audio>
+    <audio id="rain-audio" src="sounds/rain.mp3" loop preload="none" class="hidden"></audio>
+    <audio id="fireplace-audio" src="sounds/fireplace.mp3" loop preload="none" class="hidden"></audio>
 
     <!-- Embers Canvas -->
     <canvas id="embers-canvas" class="fixed inset-0 w-full h-full pointer-events-none mix-blend-screen -z-40"></canvas>
@@ -127,8 +127,6 @@
                     <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
                 </svg>
             </button>
-
-
 
             <!-- Advanced Audio Toggles -->
             <div class="flex gap-4">
